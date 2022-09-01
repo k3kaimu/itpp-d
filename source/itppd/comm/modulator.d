@@ -18,7 +18,7 @@ enum Soft_Method {
 
 class Modulator(T)
 {
-    this()
+    extern(D) this()
     {
         setup_done = false;
         k = 0;
@@ -31,7 +31,7 @@ class Modulator(T)
     }
 
 
-    this(ref const Vec!T symbols, ref const ivec bits2symbols)
+    extern(D) this(ref const Vec!T symbols, ref const ivec bits2symbols)
     {
         set(symbols, bits2symbols);
     }
@@ -100,9 +100,9 @@ unittest
 
 class QAM : Modulator!(complex!double)
 {
-    this() {}
-    this(int M) { set_M(M); }
-    ~this() {}
+    extern(D) this() { super(); }
+    extern(D) this(int M) { super(); set_M(M); }
+    ~this();
 
     void set_M(int M);
 
@@ -117,9 +117,9 @@ class QAM : Modulator!(complex!double)
 
 class PSK : Modulator!(complex!double)
 {
-    this() {}
-    this(int M) { set_M(M); }
-    ~this() {}
+    extern(D) this() { super(); }
+    this(int M) { super(); set_M(M); }
+    ~this();
 
     void set_M(int M);
 
@@ -130,8 +130,8 @@ class PSK : Modulator!(complex!double)
 
 class QPSK : PSK
 {
-    this() { super(4); }
-    ~this() {}
+    extern(D) this() { super(4); }
+    ~this();
 
 
     override void demodulate_soft_bits(ref const cvec rx_symbols, double N0,
@@ -154,8 +154,8 @@ class QPSK : PSK
 
 class BPSK_c : PSK
 {
-    this() { super(2); }
-    ~this() {}
+    extern(D) this() { super(2); }
+    ~this();
 
 
     override void modulate_bits(ref const bvec bits, ref cvec output) const;
@@ -181,14 +181,14 @@ class BPSK_c : PSK
 
 class BPSK : Modulator!double
 {
-    this()
+    extern(D) this()
     {
         Vec!double a = Vec!double("1.0 -1.0");
         ivec b = ivec("0 1");
         super(a, b);
     }
 
-    ~this() {}
+    ~this();
 
 
     override void modulate_bits(ref const bvec bits, ref vec output) const;
@@ -212,5 +212,52 @@ class BPSK : Modulator!double
                            double N0, Soft_Method method = Soft_Method.LOGMAP) const;
 }
 
+
+class PAM_c : Modulator!(complex!double)
+{
+    this() { super(); }
+    this(int M) { super(); set_M(M); }
+    ~this();
+
+    void set_M(int M);
+
+    override void demodulate_bits(ref const cvec signal, ref bvec output) const;
+    override bvec demodulate_bits(ref const cvec signal) const;
+
+    override void demodulate_soft_bits(ref const cvec rx_symbols, double N0,
+                                    ref vec soft_bits,
+                                    Soft_Method method = Soft_Method.LOGMAP) const;
+
+    override vec demodulate_soft_bits(ref const cvec rx_symbols, double N0,
+                                   Soft_Method method = Soft_Method.LOGMAP) const;
+
+    override void demodulate_soft_bits(ref const cvec rx_symbols,
+                                    ref const cvec channel, double N0,
+                                    ref vec soft_bits,
+                                    Soft_Method method = Soft_Method.LOGMAP) const;
+
+    override vec demodulate_soft_bits(ref const cvec rx_symbols,
+                                    ref const cvec channel, double N0,
+                                    Soft_Method method = Soft_Method.LOGMAP) const;
+
+  protected:
+    double scaling_factor;
+}
+
+
+class PAM : Modulator!double
+{
+    this() { super(); }
+    this(int M) { super(); set_M(M); }
+    ~this();
+
+    void set_M(int M);
+
+    override void demodulate_bits(ref const vec signal, ref bvec output) const;
+    override bvec demodulate_bits(ref const vec signal) const;
+
+protected:
+  double scaling_factor;
+}
 
 }
