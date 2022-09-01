@@ -44,7 +44,7 @@ if (is(T == class))
     alias payload this;
 
 
-    void[__traits(classInstanceSize, T)] _data = void;
+    void[__traits(classInstanceSize, T)] _data;
 
 
     const(void)* _vtable() const {
