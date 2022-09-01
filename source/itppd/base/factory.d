@@ -70,6 +70,9 @@ extern(C++, "itpp")
             }
             else
             {
+                foreach(i; 0 .. n)
+                    destroy(ptr[i]);
+
                 __cpp_delete(ptr);
             }
 
