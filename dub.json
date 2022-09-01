@@ -1,0 +1,19 @@
+{
+	"authors": [
+		"Kazuki Komatsu"
+	],
+	"copyright": "Copyright © 2022, Kazuki Komatsu",
+	"description": "D wrapper for IT++",
+	"license": "GPL",
+	"name": "itpp-d",
+	"libs": ["itpp", "stdc++"],
+	"preGenerateCommands": [
+		"mkdir cpptmp ; cd cpptmp ; which clang++ ; clang++ -fPIE -Wno-undefined-var-template -c ../itpp-wrapper/*.cpp ; ar rcs libitppw.a *.o"
+	],
+	"postGenerateCommands": [
+		"ar -x libitpp-d.a ; ar -x cpptmp/libitppw.a ; ar rcs libitpp-d.a *.o ; rm *.o"
+	],
+	"sourceFiles": [
+		"cpptmp/libitppw.a"
+	]
+}

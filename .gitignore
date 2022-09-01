@@ -1,0 +1,15 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/itpp-d
+itpp-d.so
+itpp-d.dylib
+itpp-d.dll
+itpp-d.a
+itpp-d.lib
+itpp-d-test-*
+*.exe
+*.o
+*.obj
+*.lst
