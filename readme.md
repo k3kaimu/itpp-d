@@ -53,3 +53,30 @@ void main()
     }
 }
 ```
+
+```sh
+$ dub --single --compiler=ldc2 bpsk_ber_sim.d 
+parsePackageRecipe dub.json
+Running pre-generate commands for itpp-d...
+mkdir: cannot create directory ‘cpptmp’: File exists
+/home/linuxbrew/.linuxbrew/bin/clang++
+Performing "debug" build using ldc2 for x86_64.
+itpp-d ~master: building configuration "library"...
+libstdc++ std::__cxx11::basic_string is not yet supported; the struct contains an interior pointer which breaks D move semantics!
+bpsk_ber_sim ~master: building configuration "application"...
+libstdc++ std::__cxx11::basic_string is not yet supported; the struct contains an interior pointer which breaks D move semantics!
+Linking...
+Running post-generate commands for itpp-d...
+Running bpsk_ber_sim 
+0 (dB): 0.078817
+1 (dB): 0.056131
+2 (dB): 0.037212
+3 (dB): 0.023125
+4 (dB): 0.012413
+5 (dB): 0.005804
+6 (dB): 0.002426
+7 (dB): 0.000748
+8 (dB): 0.000194
+9 (dB): 3e-05
+10 (dB): 3e-06
+```
