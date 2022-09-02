@@ -10,7 +10,7 @@ enum bool isOnStackable(T) = is(T == class) && is(typeof((ref return scope T t){
 
 
 struct OnStack(T)
-if (is(T == class))
+if (is(T == class) && isFinalClass!T)
 {
     this(Args...)(auto ref Args args)
     {
@@ -58,10 +58,10 @@ unittest
 
     OnStack!(Array!int) arr;
     arr = OnStack!(Array!int)(123);
-    assert(arr.slice.length == 123);
+    assert(arr.length == 123);
 
     arr = OnStack!(Array!int)(4);
-    assert(arr.slice.length == 4);
+    assert(arr.length == 4);
 
     OnStack!(Array!int) arr2;
 }
