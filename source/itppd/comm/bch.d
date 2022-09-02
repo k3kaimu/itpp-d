@@ -3,6 +3,7 @@ module itppd.comm.bch;
 import itppd.comm.channel_code;
 import itppd.base.vec;
 import itppd.comm.galois;
+import itppd.base.onstack;
 
 import std.traits;
 import std.meta;
@@ -11,40 +12,30 @@ import std.meta;
 extern(C++, "itpp")
 {
 
-BCH new_BCH(int in_n, int in_k, int in_t, ref const ivec genpolynom, bool sys);
-BCH new_BCH(int in_n, int in_t, bool sys);
-void delete_BCH(ref BCH);
+BCH_itpp new_BCH(int in_n, int in_k, int in_t, ref const ivec genpolynom, bool sys);
+BCH_itpp new_BCH(int in_n, int in_t, bool sys);
+void delete_BCH(ref BCH_itpp);
 
-
-class BCH : Channel_Code
+pragma(mangle, "BCH")
+class BCH_itpp : Channel_Code
 {
-    extern(D) this(int in_n, int in_k, int in_t, ref const ivec genpolynom, bool sys)
+    extern(D)
     {
-        // hacking
-        auto src = new_BCH(in_n, in_k, in_t, genpolynom, sys);
-        scope(exit) delete_BCH(src);
+        static BCH_itpp makeInstance(int in_n, int in_k, int in_t, ref const ivec genpolynom, bool sys)
+        {
+            return new_BCH(in_n, in_k, in_t, genpolynom, sys);
+        }
 
-        this.n = src.n;
-        this.k = src.k;
-        this.t = src.t;
-        this.g = src.g;
-        this.systematic = sys;
+        static BCH_itpp makeInstance(int in_n, int in_t, bool sys)
+        {
+            return new_BCH(in_n, in_t, sys);
+        }
+
+        static void deleteInstance(BCH_itpp obj)
+        {
+            delete_BCH(obj);
+        }
     }
-
-
-    extern(D) this(int in_n, int in_t, bool sys)
-    {
-        // hacking
-        auto src = new_BCH(in_n, in_t, sys);
-        scope(exit) delete_BCH(src);
-
-        this.n = src.n;
-        this.k = src.k;
-        this.t = src.t;
-        this.g = src.g;
-        this.systematic = sys;
-    }
-
 
     ~this();
 
@@ -64,33 +55,46 @@ class BCH : Channel_Code
     int get_k() const;
 
 
+    /+
   private:
     int n, k, t, _dummy1_;
     GFX g;
     union { ulong _dummy2_; bool systematic; }
+    +/
 }
 
 }
+
+
+alias BCH = WrapCppObj!BCH_itpp;
 
 
 unittest
 {
-    static assert(__traits(classInstanceSize, BCH) == 72);
-
     import itppd.base.random;
-    import std.stdio;
+
+    static void test(T)(T obj)
+    {
+        bvec input = randb(21);
+        bvec encoded = obj.encode(input);
+        bvec err = encoded;
+
+        err[1].tupleof[0] ^= 1;
+        err[2].tupleof[0] ^= 1;
+        assert(input[] != err[]);
+
+        bvec decoded = obj.decode(err);
+        assert(input[] == decoded[]);
+    }
 
     BCH bch = new BCH(31, 2, true);
-    bvec input = randb(21);
-    bvec encoded;
-    bch.encode(input, encoded);
-    bvec err = encoded;
+    BCH_itpp bch_c = bch;
+    
+    test(bch);
+    test(bch_c);
+    
+    BCH_itpp cppobj = new_BCH(31, 2, true);
+    scope(exit) delete_BCH(cppobj);
 
-    err[1].tupleof[0] ^= 1;
-    err[2].tupleof[0] ^= 1;
-    assert(input[] != err[]);
-
-    bvec decoded;
-    bch.decode(err, decoded);
-    assert(input[] == decoded[]);
+    test(cppobj);
 }
