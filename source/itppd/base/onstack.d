@@ -30,14 +30,30 @@ if (is(T == class) && isFinalClass!T)
 
     ~this()
     {
-        if(_vtable())
+        if(_vtable()) {
             .destroy(this.payload());
+            (cast(ubyte[])(_data[]))[] = 0;
+        }
     }
 
 
-    inout(T) payload() inout
+    T payload()
     {
-        return cast(inout(T)) _data.ptr;
+        if(!_vtable()) {
+            _data[] = __traits(initSymbol, T)[];
+        }
+
+        return cast(T) _data.ptr;
+    }
+
+
+    const(T) payload() const
+    {
+        if(!_vtable()) {
+            return cast(const(T)) __traits(initSymbol, T).ptr;
+        }
+
+        return cast(const(T)) _data.ptr;
     }
 
 
@@ -64,4 +80,11 @@ unittest
     assert(arr.length == 4);
 
     OnStack!(Array!int) arr2;
+    assert(arr2._vtable == null);
+
+    arr2.set_size(4);
+    assert(arr2.length == 4);
+    assert(arr2._vtable != null);
+    .destroy(arr2);
+    assert(arr2._vtable == null);
 }
