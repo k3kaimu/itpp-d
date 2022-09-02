@@ -8,9 +8,6 @@ import std.traits;
 import std.meta;
 
 
-enum isInterface(T) = is(T == interface);
-
-
 extern(C++, "itpp")
 {
 
