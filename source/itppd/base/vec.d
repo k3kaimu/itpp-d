@@ -46,7 +46,7 @@ struct Vec(T)
         extern(D) this(string str, const Factory f = defaultFactory)
         {
             factory = f;
-            Cppstring* p = make_string(str.ptr, str.length);
+            auto p = make_string(str.ptr, str.length);
             scope(exit) delete_string(p);
 
             set(ref_to_cppstring(p));

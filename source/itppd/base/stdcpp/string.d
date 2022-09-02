@@ -2,18 +2,19 @@ module itppd.base.stdcpp.string;
 
 public import core.stdcpp.string;
 
+alias cppstring = basic_string!char;
+
 extern(C++, "itpp")
 {
-    struct Cppstring;
-    Cppstring* make_string(const(char)* str);
-    Cppstring* make_string(const(char)* str, size_t n);
-    void delete_string(ref Cppstring*);
+    void* make_string(const(char)* str);
+    void* make_string(const(char)* str, size_t n);
+    void delete_string(ref void*);
 }
 
 
-ref basic_string!char ref_to_cppstring(Cppstring* p)
+ref cppstring ref_to_cppstring(void* p)
 {
-    return *cast(basic_string!char*)p;
+    return *cast(cppstring*)p;
 }
 
 // alias cppstring = basic_string!char;
@@ -27,8 +28,8 @@ ref basic_string!char ref_to_cppstring(Cppstring* p)
 
 unittest
 {
-    Cppstring* str1 = make_string("123");
+    auto str1 = make_string("123");
     delete_string(str1);
-    Cppstring* str2 = make_string("123", 3);
+    auto str2 = make_string("123", 3);
     delete_string(str2);
 }
