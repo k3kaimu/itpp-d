@@ -3,26 +3,22 @@
 namespace itpp
 {
 
-struct Cppstring;
-
-Cppstring* make_string(char const* str)
+void* make_string(char const* str)
 {
-    std::string *p = new std::string(str);
-    return reinterpret_cast<Cppstring*>(p);
+    return new std::string(str);;
 }
 
 
-Cppstring* make_string(char const* str, size_t n)
+void* make_string(char const* str, size_t n)
 {
-    std::string *p = new std::string(str, n);
-    return reinterpret_cast<Cppstring*>(p);
+    return new std::string(str, n);
 }
 
 
-void delete_string(Cppstring *& p)
+void delete_string(void *& p)
 {
-    std::string* str = reinterpret_cast<std::string*>(p);
-    delete str;
+    std::string* ps = reinterpret_cast<std::string*>(p);
+    delete ps;
     p = 0;
 }
 
