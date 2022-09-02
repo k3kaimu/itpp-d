@@ -51,13 +51,13 @@ struct GF
 extern(C++, class)
 struct GFX
 {
-    this(int qvalue)
+    extern(D) this(int qvalue)
     {
         q = qvalue;
     }
 
 
-    this(int qvalue, int indegree)
+    extern(D) this(int qvalue, int indegree)
     {
         q = qvalue;
         coeffs.set_size(indegree + 1, false);
@@ -67,15 +67,23 @@ struct GFX
     }
 
 
-    this(int qvalue, ref const ivec invalues)
+    extern(D) this(int qvalue, ref const ivec invalues)
     {
         set(qvalue, invalues);
     }
 
 
-    this(int qvalue, const char* invalues)
+    extern(D) this(int qvalue, const char* invalues)
     {
         set(qvalue, invalues);
+    }
+
+
+    extern(D) this(ref return scope GFX rhs)
+    {
+        degree = rhs.degree;
+        q = rhs.q;
+        coeffs = rhs.coeffs;
     }
 
 
@@ -90,7 +98,7 @@ struct GFX
     void set(int qvalue, ref const ivec invalues);
     void clear();
 
-  private:
+//   private:
     int degree = -1, q = 0;
     OnStack!(Array!GF) coeffs;
 }

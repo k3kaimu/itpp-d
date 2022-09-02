@@ -45,6 +45,7 @@ extern(C++, "itpp")
             import std.traits : Unqual;
 
             emplace!(typeof(this))(this_._data, defaultFactory);
+            // this_._data[] = __traits(initSymbol, Array)[];
         }
 
 
@@ -56,8 +57,10 @@ extern(C++, "itpp")
             import std.traits : Unqual;
 
             emplace!(typeof(this))(this_._data, rhs.ndata);
-            foreach(i; 0 .. rhs.ndata)
+            // this_._data[] = __traits(initSymbol, Array)[];
+            foreach(i; 0 .. rhs.ndata) {
                 this_.data[i] = rhs.data[i];
+            }
         }
 
 
@@ -167,7 +170,7 @@ extern(C++, "itpp")
 
         int ndata;
         T* data;
-        Rebindable!(const(Factory)) factory;
+        Rebindable!(const(Factory)) factory = defaultFactory;
 
         static assert(typeof(factory).sizeof == Factory.sizeof);
     }
