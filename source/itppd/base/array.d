@@ -193,4 +193,8 @@ unittest
     arr ~= 5;
     assert(arr.length == 5);
     assert(arr[] == [1, 2, 3, 4, 5]);
+
+    arr ~= arr;
+    assert(arr.length == 10);
+    assert(arr[] == [1, 2, 3, 4, 5, 1, 2, 3, 4, 5]);
 }
