@@ -7,7 +7,7 @@ import itppd.base.binary;
 extern(C++, "itpp")
 {
 
-extern(C++, class)
+
 interface Channel_Code
 {
     void encode(ref const bvec uncoded_bits, ref bvec coded_bits);
