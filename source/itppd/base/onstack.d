@@ -5,7 +5,8 @@ import std.traits;
 
 enum bool isOnStackable(T) = is(T == class) && is(typeof((ref return scope T t){
     OnStack!T s;
-    T.emplaceCC(s, t);
+    T.emplaceCC(s, t);  // copy constructor
+    T.emplaceDC(s);     // default constructor
 }));
 
 
@@ -40,7 +41,7 @@ if (is(T == class) && isFinalClass!T)
     T payload()
     {
         if(!_vtable()) {
-            _data[] = __traits(initSymbol, T)[];
+            T.emplaceDC(this);
         }
 
         return cast(T) _data.ptr;

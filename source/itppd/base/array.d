@@ -37,6 +37,17 @@ extern(C++, "itpp")
         }
 
 
+        //  emplace default constructor
+        extern(D)
+        static void emplaceDC(ref OnStack!Array this_)
+        {
+            import core.lifetime : emplace;
+            import std.traits : Unqual;
+
+            emplace!(typeof(this))(this_._data, defaultFactory);
+        }
+
+
         //  emplace copy constructor
         extern(D)
         static void emplaceCC(ref OnStack!Array this_, return scope Array rhs)
