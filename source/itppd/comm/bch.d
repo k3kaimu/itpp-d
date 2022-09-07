@@ -92,7 +92,7 @@ unittest
         test_BCH(obj, desired_k);
     }
 
-    BCH bch = new BCH(31, 2, true);
+    BCH bch = BCH(31, 2, true);
     BCH_itpp bch_c = bch.cppInstance;
     
     test(bch, 21);

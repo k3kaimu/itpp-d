@@ -3,6 +3,8 @@ module itppd.base.wrapclass;
 import std.traits;
 import std.typecons;
 import std.meta;
+import std.conv;
+import core.lifetime;
 
 // https://github.com/dlang/phobos/blob/v2.100.1/std/typecons.d#L6261
 template GetOverloadedMethods(T)
@@ -162,8 +164,111 @@ if(is(C == class))
     }
     alias TargetMembers = Uniq!(OnlyVirtual!(GetOverloadedMethods!C));             // list of FuncInfo
 
+
+    template generateFun(size_t i, string target, bool forClass = true)
+    {
+        enum name = TargetMembers[i].name;
+        enum fa = functionAttributes!(TargetMembers[i].type);
+        static @property stc()
+        {
+            string r;
+            if (fa & FunctionAttribute.property)    r ~= "@property ";
+            if (fa & FunctionAttribute.ref_)        r ~= "ref ";
+            if (fa & FunctionAttribute.pure_)       r ~= "pure ";
+            if (fa & FunctionAttribute.nothrow_)    r ~= "nothrow ";
+            if (fa & FunctionAttribute.trusted)     r ~= "@trusted ";
+            if (fa & FunctionAttribute.safe)        r ~= "@safe ";
+            return r;
+        }
+        static @property mod()
+        {
+            alias type = AliasSeq!(TargetMembers[i].type)[0];
+            string r;
+            static if (is(type == immutable))       r ~= " immutable";
+            else
+            {
+                static if (is(type == shared))      r ~= " shared";
+                static if (is(type == const))       r ~= " const";
+                else static if (is(type == inout))  r ~= " inout";
+                //else  --> mutable
+            }
+            return r;
+        }
+        enum n = to!string(i);
+        enum fbody = target~"."~name~"(forward!args)";
+
+        static if(forClass)
+        {
+            enum generateFun =
+                "extern(C++) override "~stc~"ReturnType!(TargetMembers["~n~"].type) "
+                ~ name~"(Parameters!(TargetMembers["~n~"].type) args) "~mod~
+                "{ return "~fbody~"; }";
+        }
+        else
+        {
+            enum generateFun =
+                stc~"ReturnType!(TargetMembers["~n~"].type) "
+                ~ name~"(Parameters!(TargetMembers["~n~"].type) args) "~mod~
+                "{ return "~fbody~"; }";
+        }
+    }
+
+
+    struct WrapCppObj
+    {
+        alias DStruct = typeof(this);
+        alias DClass = WrapCppObjAsClass;
+        alias CppClass = C;
+
+
+        this(Args...)(auto ref Args args)
+        {
+            _payload = RefCounted!Payload(args);
+        }
+
+
+        static foreach (i; 0 .. TargetMembers.length) {
+            static if(TargetMembers[i].name != "__dtor" && TargetMembers[i].name != "__aggrDtor")
+                mixin(generateFun!(i, "_payload._wrap_source", false));
+        }
+
+
+        inout(C) cppInstance() inout
+        {
+            return _payload._wrap_source;
+        }
+
+
+        alias cppInstance this;
+
+
+      private:
+        RefCounted!Payload _payload;
+
+        static struct Payload
+        {
+            this(Args...)(auto ref Args args)
+            {
+                _wrap_source = C.makeInstance(forward!args);
+            }
+
+
+            ~this()
+            {
+                if(_wrap_source) {
+                    C.deleteInstance(_wrap_source);
+                    _wrap_source = null;
+                }
+            }
+
+
+            C _wrap_source;
+        }
+    }
+
+
     // Internal wrapper class
-    class WrapCppObj : C
+    class WrapCppObjAsClass : C
     {
         this(Args...)(auto ref Args args)
         {
@@ -186,62 +291,13 @@ if(is(C == class))
         }
 
 
-    private:
+      private:
         C _wrap_source;
 
-        import std.conv : to;
-        import core.lifetime : forward;
-        template generateFun(size_t i)
-        {
-            enum name = TargetMembers[i].name;
-            enum fa = functionAttributes!(TargetMembers[i].type);
-            static @property stc()
-            {
-                string r;
-                if (fa & FunctionAttribute.property)    r ~= "@property ";
-                if (fa & FunctionAttribute.ref_)        r ~= "ref ";
-                if (fa & FunctionAttribute.pure_)       r ~= "pure ";
-                if (fa & FunctionAttribute.nothrow_)    r ~= "nothrow ";
-                if (fa & FunctionAttribute.trusted)     r ~= "@trusted ";
-                if (fa & FunctionAttribute.safe)        r ~= "@safe ";
-                return r;
-            }
-            static @property mod()
-            {
-                alias type = AliasSeq!(TargetMembers[i].type)[0];
-                string r;
-                static if (is(type == immutable))       r ~= " immutable";
-                else
-                {
-                    static if (is(type == shared))      r ~= " shared";
-                    static if (is(type == const))       r ~= " const";
-                    else static if (is(type == inout))  r ~= " inout";
-                    //else  --> mutable
-                }
-                return r;
-            }
-            enum n = to!string(i);
-            static if (fa & FunctionAttribute.property)
-            {
-                static if (Parameters!(TargetMembers[i].type).length == 0)
-                    enum fbody = "_wrap_source."~name;
-                else
-                    enum fbody = "_wrap_source."~name~" = forward!args";
-            }
-            else
-            {
-                    enum fbody = "_wrap_source."~name~"(forward!args)";
-            }
-            enum generateFun =
-                "extern(C++) override "~stc~"ReturnType!(TargetMembers["~n~"].type) "
-                ~ name~"(Parameters!(TargetMembers["~n~"].type) args) "~mod~
-                "{ return "~fbody~"; }";
-        }
-
-    public:
+      public:
         static foreach (i; 0 .. TargetMembers.length) {
             static if(TargetMembers[i].name != "__dtor" && TargetMembers[i].name != "__aggrDtor")
-                mixin(generateFun!i);
+                mixin(generateFun!(i, "_wrap_source", true));
         }
     }
 }
