@@ -3,7 +3,8 @@ module itppd.comm.bch;
 import itppd.comm.channel_code;
 import itppd.base.vec;
 import itppd.comm.galois;
-import itppd.base.onstack;
+// import itppd.base.onstack;
+import itppd.base.wrapclass;
 
 import std.traits;
 import std.meta;
@@ -55,12 +56,10 @@ class BCH_itpp : Channel_Code
     int get_k() const;
 
 
-    /+
-  private:
-    int n, k, t, _dummy1_;
-    GFX g;
-    union { ulong _dummy2_; bool systematic; }
-    +/
+//   private:
+//     int n, k, t, _dummy1_;
+//     GFX g;
+//     union { ulong _dummy2_; bool systematic; }
 }
 
 }
@@ -73,9 +72,12 @@ unittest
 {
     import itppd.base.random;
 
-    static void test(T)(T obj)
+    static void test(T)(T obj, int desired_k)
     {
-        bvec input = randb(21);
+        assert(obj.get_k == desired_k);
+
+        bvec input = randb(obj.get_k);
+        assert(obj.get_k == 21);
         bvec encoded = obj.encode(input);
         bvec err = encoded;
 
@@ -85,16 +87,26 @@ unittest
 
         bvec decoded = obj.decode(err);
         assert(input[] == decoded[]);
+
+        // cpp test
+        test_BCH(obj, desired_k);
     }
 
     BCH bch = new BCH(31, 2, true);
-    BCH_itpp bch_c = bch;
+    BCH_itpp bch_c = bch.cppInstance;
     
-    test(bch);
-    test(bch_c);
+    test(bch, 21);
+    test(bch_c, 21);
     
     BCH_itpp cppobj = new_BCH(31, 2, true);
     scope(exit) delete_BCH(cppobj);
 
-    test(cppobj);
+    test(cppobj, 21);
+}
+
+
+version(unittest)
+{
+    extern(C++, "itpp") extern(C++, "test")
+    void test_BCH(BCH_itpp obj, int desired_k);
 }
